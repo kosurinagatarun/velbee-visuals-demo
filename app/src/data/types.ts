@@ -19,6 +19,16 @@ export type Angle = {
   face: string
 }
 
+/** One camera pitch level (side, oblique, top plan, etc.). */
+export type OrbitPitchRing = {
+  id: string
+  label: string
+  /** File under `building/{angle}/` or `building/` when `shared`. */
+  file: string
+  /** Single file for all angles (typical top-down plan); spin uses CSS rotation. */
+  shared?: boolean
+}
+
 export type Arrow = {
   yaw: number
   pitch: number
@@ -56,6 +66,8 @@ export type Band = {
 export type ContentPack = {
   floors: FloorRow[]
   angles: Angle[]
+  /** Vertical view levels for building orbit (side → top). */
+  pitchRings: OrbitPitchRing[]
   bands: Record<string, Band[]>
   plates: Record<string, Plate>
   /** Site exterior walkthrough (Panom-style equirect graph). */

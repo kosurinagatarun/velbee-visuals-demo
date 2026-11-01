@@ -27,10 +27,14 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        const total = pack.angles.length
+        const total =
+          pack.pitchRings.reduce(
+            (sum, ring) => sum + (ring.shared ? 1 : pack.angles.length),
+            0,
+          ) || pack.angles.length
         setState({ status: 'loading', phase: 'assets', loaded: 0, total })
 
-        await preloadBuildingOrbit(pack.angles, (loaded, t) => {
+        await preloadBuildingOrbit(pack.angles, pack.pitchRings, (loaded, t) => {
           if (!cancelled) setState({ status: 'loading', phase: 'assets', loaded, total: t })
         })
 

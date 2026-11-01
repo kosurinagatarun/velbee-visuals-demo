@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "build:client": "tsc -b && vite build --mode client && node scripts/package-client-release.mjs",
     "build:vercel": "node scripts/prepare-vercel-content.mjs && tsc -b && vite build --mode client && node scripts/prune-dist-content.mjs",
+    "bake:day-high": "node ../content/scripts/bake-day-high-placeholders.mjs",
     "build:pages": "tsc -b && vite build --mode client --base /velbee-visuals-demo/ && node scripts/sync-github-pages.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
@@ -37,6 +38,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "oxlint": "^1.89.0",
     "playwright": "^1.56.1",
+    "sharp": "^0.35.5",
     "typescript": "~7.0.2",
     "vite": "^8.3.5"
   }

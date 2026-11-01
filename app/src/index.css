@@ -283,7 +283,7 @@ button {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: contain;
   pointer-events: none;
 }
 
@@ -1140,6 +1140,62 @@ html.velbee-tour-active body {
   padding: 10px 16px;
   border-top: 1px solid var(--line);
   color: var(--muted);
+}
+
+.orbit-pitch-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.orbit-pitch-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+.orbit-pitch-rail {
+  position: absolute;
+  right: max(10px, var(--safe-right));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.orbit-pitch-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+  opacity: 0.85;
+}
+
+.orbit-pitch-dot.is-on {
+  background: var(--accent);
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
+.orbit-plan-spin,
+.orbit-layer img.orbit-plan-spin {
+  transform-origin: center center;
+}
+
+.stage-building-only .topbar-building:has(.orbit-pitch-nav) {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto;
+}
+
+.stage-building-only .topbar-building:has(.orbit-pitch-nav) .orbit-pitch-nav {
+  grid-column: 1 / -1;
+  justify-content: center;
+  padding-top: 4px;
 }
 
 @media (max-width: 860px) {

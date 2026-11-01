@@ -1,6 +1,6 @@
 import { joinContentPath, isBuildingOnlyMode } from '../config/visuals'
 import { preloadImages } from '../lib/preloadImages'
-import type { Angle, Band, ContentPack, Fitout, FloorLevel, FloorRow, Plate, Stop } from './types'
+import type { Angle, Band, ContentPack, Fitout, FloorLevel, FloorRow, OrbitPitchRing, Plate, Stop } from './types'
 
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/)
@@ -34,15 +34,50 @@ function isLevel(value: string): value is FloorLevel {
 
 const BUILDING_CACHE = 'orbit-301-v1'
 
-export function buildingStillUrl(angleId: string, light: 'day' | 'night'): string {
-  return `${joinContentPath('building', angleId, `${light}.jpg`)}?v=${BUILDING_CACHE}`
+const DEFAULT_PITCH_RINGS: OrbitPitchRing[] = [{ id: 'eye', label: 'Side', file: 'day.jpg' }]
+
+function normalizePitchRings(raw: unknown): OrbitPitchRing[] {
+  if (!Array.isArray(raw) || raw.length < 1) return DEFAULT_PITCH_RINGS
+  const rings: OrbitPitchRing[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const row = item as Record<string, unknown>
+    const id = String(row.id ?? '').trim()
+    const file = String(row.file ?? '').trim()
+    if (!id || !file) continue
+    rings.push({
+      id,
+      label: String(row.label ?? id).trim() || id,
+      file,
+      shared: row.shared === true,
+    })
+  }
+  return rings.length ? rings : DEFAULT_PITCH_RINGS
+}
+
+/** Filename uses `ring.file` (e.g. day.jpg, day-high.jpg). */
+export function buildingStillUrl(angleId: string, ring: OrbitPitchRing, light: 'day' | 'night' = 'day'): string {
+  const cache = `${BUILDING_CACHE}-${ring.id}`
+  if (ring.shared) {
+    return `${joinContentPath('building', ring.file)}?v=${cache}`
+  }
+  const name = ring.file.includes('.') ? ring.file : `${light}.jpg`
+  return `${joinContentPath('building', angleId, name)}?v=${cache}`
 }
 
 export async function preloadBuildingOrbit(
   angles: Angle[],
+  pitchRings: OrbitPitchRing[],
   onProgress?: (loaded: number, total: number) => void,
 ): Promise<void> {
-  const urls = angles.map((a) => buildingStillUrl(a.id, 'day'))
+  const urls: string[] = []
+  for (const ring of pitchRings) {
+    if (ring.shared) {
+      urls.push(buildingStillUrl(angles[0]?.id ?? '001', ring, 'day'))
+      continue
+    }
+    for (const a of angles) urls.push(buildingStillUrl(a.id, ring, 'day'))
+  }
   await preloadImages(urls, { concurrency: 10, onProgress })
 }
 
@@ -109,10 +144,15 @@ export async function loadContent(): Promise<ContentPack> {
   const errors: string[] = []
   const buildingOnly = isBuildingOnlyMode()
 
-  const [anglesCsv, bands] = await Promise.all([
+  const [anglesCsv, bands, buildingSpec] = await Promise.all([
     fetchText(joinContentPath('building', 'angles.csv')),
     fetchJson<Record<string, Band[]>>(joinContentPath('building', 'bands.json')),
+    fetchJson<{ pitch_rings?: unknown }>(joinContentPath('building', 'building-spec.json')).catch(() => ({})),
   ])
+
+  const pitchRings = normalizePitchRings(
+    'pitch_rings' in buildingSpec ? buildingSpec.pitch_rings : undefined,
+  )
 
   let floors: FloorRow[] = []
   if (!buildingOnly) {
@@ -158,6 +198,7 @@ export async function loadContent(): Promise<ContentPack> {
   return {
     floors,
     angles,
+    pitchRings,
     bands: buildingOnly ? {} : bands,
     plates,
     exterior,
