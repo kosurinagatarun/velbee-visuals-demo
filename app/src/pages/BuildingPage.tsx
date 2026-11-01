@@ -7,9 +7,21 @@ import { compassDeg } from '../data/labels'
 import { isBuildingOnlyMode, showcaseTitle, VISUALS_BRAND } from '../config/visuals'
 
 const SNAP_MS = 220
-const PX_PER_FRAME = 3
-const ORBIT_ZOOM_MIN = 1
+const PX_PER_FRAME_DESKTOP = 3
+const PX_PER_FRAME_MOBILE = 2
+const ORBIT_ZOOM_MIN = 0.92
 const ORBIT_ZOOM_MAX = 2.5
+
+function pxPerFrame() {
+  if (typeof window === 'undefined') return PX_PER_FRAME_DESKTOP
+  return window.matchMedia('(max-width: 860px)').matches ? PX_PER_FRAME_MOBILE : PX_PER_FRAME_DESKTOP
+}
+
+function pinchDistance(points: Map<number, { x: number; y: number }>) {
+  const pts = [...points.values()]
+  if (pts.length < 2) return 0
+  return Math.hypot(pts[0]!.x - pts[1]!.x, pts[0]!.y - pts[1]!.y)
+}
 
 function wrap(value: number, count: number): number {
   return ((value % count) + count) % count
@@ -28,6 +40,8 @@ export function BuildingPage() {
   const [params, setParams] = useSearchParams()
   const [dragging, setDragging] = useState(false)
   const [orbitZoom, setOrbitZoom] = useState(1)
+  const orbitZoomRef = useRef(1)
+  orbitZoomRef.current = orbitZoom
 
   const count = pack.angles.length
   const angleId = params.get('angle') ?? pack.angles[0]?.id ?? '001'
@@ -44,6 +58,14 @@ export function BuildingPage() {
   const viewRef = useRef<HTMLElement>(null)
   const animateToRef = useRef<(target: number) => void>(() => {})
   const writeOrbitRef = useRef<(value: number) => void>(() => {})
+
+  useEffect(() => {
+    if (buildingOnly) {
+      document.documentElement.classList.add('is-building-showcase')
+      return () => document.documentElement.classList.remove('is-building-showcase')
+    }
+    return undefined
+  }, [buildingOnly])
 
   useEffect(() => {
     document.title = buildingOnly
@@ -105,6 +127,9 @@ export function BuildingPage() {
     const el = viewRef.current
     if (!el) return
 
+    const pointers = new Map<number, { x: number; y: number }>()
+    const pinch = { dist: 0, zoom: 1 }
+
     const onWheel = (event: WheelEvent) => {
       event.preventDefault()
       setOrbitZoom((z) => {
@@ -113,25 +138,72 @@ export function BuildingPage() {
       })
     }
 
-    const onDown = (event: PointerEvent | MouseEvent) => {
-      if ('button' in event && event.button !== 0) return
+    const onDown = (event: PointerEvent) => {
+      if (event.button !== 0) return
       const target = event.target as HTMLElement
       if (target.closest('button')) return
+
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+
+      if (pointers.size >= 2) {
+        dragRef.current = null
+        setDragging(false)
+        pinch.dist = pinchDistance(pointers)
+        pinch.zoom = orbitZoomRef.current
+        return
+      }
+
       if (animRef.current) cancelAnimationFrame(animRef.current)
       dragRef.current = { x: event.clientX, start: orbitRef.current, moved: false }
       setDragging(true)
+      try {
+        el.setPointerCapture(event.pointerId)
+      } catch {
+        /* ignore */
+      }
     }
 
-    const onMove = (event: PointerEvent | MouseEvent) => {
+    const onMove = (event: PointerEvent) => {
+      if (pointers.has(event.pointerId)) {
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      }
+
+      if (pointers.size >= 2 && pinch.dist > 10) {
+        event.preventDefault()
+        const dist = pinchDistance(pointers)
+        if (dist > 0) {
+          const ratio = dist / pinch.dist
+          const next = pinch.zoom * ratio
+          setOrbitZoom(Math.max(ORBIT_ZOOM_MIN, Math.min(ORBIT_ZOOM_MAX, next)))
+        }
+        return
+      }
+
       const drag = dragRef.current
       if (!drag) return
       event.preventDefault()
       const dx = event.clientX - drag.x
       if (Math.abs(dx) > 6) drag.moved = true
-      writeOrbitRef.current(drag.start - dx / PX_PER_FRAME)
+      writeOrbitRef.current(drag.start - dx / pxPerFrame())
     }
 
-    const onUp = () => {
+    const endPointer = (event: PointerEvent) => {
+      pointers.delete(event.pointerId)
+      try {
+        if (el.hasPointerCapture(event.pointerId)) el.releasePointerCapture(event.pointerId)
+      } catch {
+        /* ignore */
+      }
+
+      if (pointers.size >= 2) {
+        pinch.dist = pinchDistance(pointers)
+        setOrbitZoom((z) => {
+          pinch.zoom = z
+          return z
+        })
+        return
+      }
+
       const drag = dragRef.current
       if (!drag) return
       dragRef.current = null
@@ -141,15 +213,15 @@ export function BuildingPage() {
 
     el.addEventListener('wheel', onWheel, { passive: false })
     el.addEventListener('pointerdown', onDown)
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onUp)
-    window.addEventListener('mouseup', onUp)
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerup', endPointer)
+    el.addEventListener('pointercancel', endPointer)
     return () => {
       el.removeEventListener('wheel', onWheel)
       el.removeEventListener('pointerdown', onDown)
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('mouseup', onUp)
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerup', endPointer)
+      el.removeEventListener('pointercancel', endPointer)
     }
   }, [count])
 
@@ -157,16 +229,22 @@ export function BuildingPage() {
 
   return (
     <div className={stageClass}>
-      <header className="topbar">
+      <header className="topbar topbar-building">
         <span className="crumb">
           {buildingOnly ? showcaseTitle() : VISUALS_BRAND.product}
         </span>
-        <div className="modes">
-          <button type="button" onClick={() => rotate(-1)} aria-label="Rotate left">
-            Rotate left
+        <div className="modes modes-building">
+          <button type="button" className="orbit-nav-btn" onClick={() => rotate(-1)} aria-label="Rotate left">
+            <span className="orbit-nav-icon" aria-hidden>
+              ←
+            </span>
+            <span className="orbit-nav-label">Left</span>
           </button>
-          <button type="button" onClick={() => rotate(1)} aria-label="Rotate right">
-            Rotate right
+          <button type="button" className="orbit-nav-btn" onClick={() => rotate(1)} aria-label="Rotate right">
+            <span className="orbit-nav-icon" aria-hidden>
+              →
+            </span>
+            <span className="orbit-nav-label">Right</span>
           </button>
         </div>
         <div className="compass" aria-label={`Facing ${angle.face}`}>
@@ -198,7 +276,10 @@ export function BuildingPage() {
             </button>
           </div>
           {buildingOnly ? (
-            <p className="building-hint">Drag to rotate · Scroll or use −/+ to zoom</p>
+            <p className="building-hint">
+              <span className="building-hint-desktop">Drag to rotate · Scroll or −/+ to zoom</span>
+              <span className="building-hint-touch">Swipe to rotate · Pinch or −/+ to zoom</span>
+            </p>
           ) : null}
         </section>
 

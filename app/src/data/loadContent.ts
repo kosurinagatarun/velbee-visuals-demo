@@ -1,4 +1,5 @@
 import { joinContentPath, isBuildingOnlyMode } from '../config/visuals'
+import { preloadImages } from '../lib/preloadImages'
 import type { Angle, Band, ContentPack, Fitout, FloorLevel, FloorRow, Plate, Stop } from './types'
 
 function parseCsv(text: string): Record<string, string>[] {
@@ -35,6 +36,14 @@ const BUILDING_CACHE = 'orbit-301-v1'
 
 export function buildingStillUrl(angleId: string, light: 'day' | 'night'): string {
   return `${joinContentPath('building', angleId, `${light}.jpg`)}?v=${BUILDING_CACHE}`
+}
+
+export async function preloadBuildingOrbit(
+  angles: Angle[],
+  onProgress?: (loaded: number, total: number) => void,
+): Promise<void> {
+  const urls = angles.map((a) => buildingStillUrl(a.id, 'day'))
+  await preloadImages(urls, { concurrency: 10, onProgress })
 }
 
 export function plateAssetUrl(plateCode: string, file: string): string {

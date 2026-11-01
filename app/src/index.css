@@ -7,6 +7,17 @@
   --accent: #c4a574;
   --accent-dim: rgba(196, 165, 116, 0.22);
   --sans: "Segoe UI", system-ui, sans-serif;
+  --building-chrome: 118px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+html.is-building-showcase,
+html.is-building-showcase body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 * {
@@ -46,6 +57,66 @@ button {
   text-align: left;
   color: var(--muted);
   max-width: 40rem;
+}
+
+.boot-preloader {
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, #1a1c24 0%, var(--bg) 70%);
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+.boot-inner {
+  width: min(22rem, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.boot-brand {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.boot-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.boot-progress {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.boot-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.boot-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  transition: width 0.15s ease-out;
+}
+
+.boot-status {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.boot-pct {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
 }
 
 .stage {
@@ -855,30 +926,215 @@ html.velbee-tour-active body {
   overflow: hidden;
 }
 
+.stage-building-only {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
 .stage-building-only .stage-body {
   grid-template-columns: 1fr;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-building-only .topbar-building {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  padding-top: max(10px, var(--safe-top));
+  padding-left: max(12px, var(--safe-left));
+  padding-right: max(12px, var(--safe-right));
+}
+
+.stage-building-only .crumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(0.85rem, 3.5vw, 1rem);
+}
+
+.stage-building-only .modes-building {
+  margin-left: 0;
+  gap: 6px;
+}
+
+.orbit-nav-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.orbit-nav-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.orbit-nav-label {
+  display: none;
+}
+
+.stage-building-only .compass {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .stage-building-only .viewport {
-  min-height: calc(100svh - 52px);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-height: none;
+  padding: 0;
+}
+
+.stage-building-only .frame {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage-building-only .orbit {
+  width: 100%;
+  max-height: 100%;
 }
 
 .stage-building-only .still img,
 .stage-building-only .orbit-sizer {
-  max-height: calc(100svh - 120px);
+  max-height: calc(100dvh - var(--building-chrome) - var(--safe-top) - var(--safe-bottom));
+  max-width: calc(100vw - var(--safe-left) - var(--safe-right));
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.stage-building-only .orbit-layer img {
+  object-fit: contain;
+}
+
+.stage-building-only .orbit-zoom-ui {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(12px, var(--safe-bottom));
+  padding: 6px 10px;
+  gap: 6px;
+}
+
+.stage-building-only .orbit-zoom-ui button {
+  width: 44px;
+  height: 44px;
+  font-size: 1.15rem;
+}
+
+.building-hint-desktop {
+  display: none;
+}
+
+.building-hint-touch {
+  display: inline;
 }
 
 .building-hint {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  right: auto;
+  bottom: calc(68px + var(--safe-bottom));
   margin: 0;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
   background: rgba(12, 13, 16, 0.78);
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: clamp(0.72rem, 2.8vw, 0.85rem);
   pointer-events: none;
+  max-width: calc(100% - 24px);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.building-footer {
+  flex-shrink: 0;
+  padding-bottom: max(10px, var(--safe-bottom));
+  padding-left: max(16px, var(--safe-left));
+  padding-right: max(16px, var(--safe-right));
+  font-size: clamp(0.72rem, 2.5vw, 0.8rem);
+}
+
+@media (min-width: 861px) {
+  .stage-building-only .topbar-building {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .stage-building-only .modes-building {
+    margin-left: auto;
+  }
+
+  .orbit-nav-label {
+    display: inline;
+  }
+
+  .building-hint-desktop {
+    display: inline;
+  }
+
+  .building-hint-touch {
+    display: none;
+  }
+
+  .building-hint {
+    left: auto;
+    right: 16px;
+    transform: none;
+    bottom: 16px;
+  }
+
+  .stage-building-only .orbit-zoom-ui {
+    left: 16px;
+    transform: none;
+    bottom: 16px;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 860px) {
+  :root {
+    --building-chrome: 100px;
+  }
+
+  .orbit-nav-label {
+    display: inline;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 599px) {
+  :root {
+    --building-chrome: 82px;
+  }
+
+  .building-footer-sep,
+  .building-footer span:first-child {
+    display: none;
+  }
+}
+
+.building-footer-sep {
+  opacity: 0.5;
 }
 
 .building-footer {
@@ -889,11 +1145,6 @@ html.velbee-tour-active body {
   padding: 10px 16px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.building-footer-sep {
-  opacity: 0.5;
 }
 
 @media (max-width: 860px) {
