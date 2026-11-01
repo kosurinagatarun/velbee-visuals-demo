@@ -1126,11 +1126,6 @@ html.velbee-tour-active body {
   :root {
     --building-chrome: 82px;
   }
-
-  .building-footer-sep,
-  .building-footer span:first-child {
-    display: none;
-  }
 }
 
 .building-footer-sep {

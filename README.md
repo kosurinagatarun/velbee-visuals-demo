@@ -1,6 +1,6 @@
 # velbee-visuals-demo
 
-Public demo of **VelBEE Visuals** — interactive **360° building orbit** (301 frames). Building showcase only (no floors or tours).
+Public demo of **VelBEE Visuals** — interactive **360° building orbit**. Building showcase only (no floors or tours).
 
 ## Live demo
 

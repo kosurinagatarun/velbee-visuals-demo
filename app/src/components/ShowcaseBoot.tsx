@@ -13,10 +13,7 @@ export function ShowcaseBoot(props: Props) {
   const pct =
     props.phase === 'metadata' ? 0 : total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 100
 
-  const status =
-    props.phase === 'metadata'
-      ? 'Preparing showcase…'
-      : `Loading views… ${loaded} / ${total}`
+  const status = props.phase === 'metadata' ? 'Preparing showcase…' : 'Loading showcase…'
 
   return (
     <div className="boot boot-preloader" role="status" aria-live="polite" aria-busy="true">

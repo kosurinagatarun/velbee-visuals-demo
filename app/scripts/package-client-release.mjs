@@ -38,9 +38,8 @@ const readme = `# Client deliverable — building orbit only
 
 ## What is included
 
-- **Single page:** interactive **360° building spin** (drag to rotate).
-- **${fs.existsSync(path.join(content, 'building', '001', 'day.jpg')) ? '301' : '?'}** orbit stills at \`content/building/001/day.jpg\` … \`301/day.jpg\` (1920×1080).
-- **Zoom:** scroll wheel or −/+ controls (building only, not the whole browser page).
+- **Single page:** interactive **360° building spin** (drag or swipe to rotate).
+- **Zoom:** scroll wheel, pinch, or −/+ controls (building only, not the whole browser page).
 - **Rotate left / right** buttons and compass.
 - **No** floor picker, interior tours, exterior walk, or extra routes.
 
@@ -77,7 +76,7 @@ Open the URL shown (usually http://localhost:3000).
 
 ## Size
 
-Orbit JPEGs are ~150 MB total. Use a CDN or gzip-disabled static host for best performance.
+Image assets are large. Use a CDN or static host with generous limits for best performance.
 
 ## Customize title
 

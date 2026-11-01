@@ -293,8 +293,6 @@ export function BuildingPage() {
       {buildingOnly ? (
         <footer className="building-footer">
           <span>{VISUALS_BRAND.product}</span>
-          <span className="building-footer-sep">·</span>
-          <span>{count} views · 360° orbit</span>
         </footer>
       ) : null}
     </div>
