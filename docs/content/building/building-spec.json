@@ -1,0 +1,24 @@
+{
+  "reference": "301 Lumion orbit stills (TEST 0_00000 … 00300, ingested to 001–301)",
+  "program": "Gachibowli tower exterior — Lumion perspective stills",
+  "massing_m": {
+    "width": 22,
+    "depth": 12,
+    "ground_height": 4.2,
+    "typical_height": 0
+  },
+  "orbit": {
+    "frame_count": 301,
+    "step_deg": 1.196,
+    "radius_m": 40,
+    "camera_y_m": 5.8,
+    "look_y_m": 3.0,
+    "fov_deg": 30
+  },
+  "output": {
+    "width": 1920,
+    "height": 1080,
+    "jpeg_quality": 0.94,
+    "light": "day"
+  }
+}
