@@ -15,6 +15,7 @@ release/*.zip
 .env
 .env.*
 !.env.example
+!.env.client
 
 # OS / IDE
 .DS_Store
