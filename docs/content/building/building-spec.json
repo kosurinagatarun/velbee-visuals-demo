@@ -20,17 +20,6 @@
       "id": "eye",
       "label": "Regular",
       "file": "day.jpg"
-    },
-    {
-      "id": "high",
-      "label": "High",
-      "file": "day-high.jpg"
-    },
-    {
-      "id": "top",
-      "label": "Bird's eye",
-      "file": "plan/top.jpg",
-      "shared": true
     }
   ],
   "output": {
