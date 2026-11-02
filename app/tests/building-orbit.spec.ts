@@ -84,7 +84,7 @@ test.describe('Building orbit (Panom-style)', () => {
 
   test('High view mode loads high orbit stills', async ({ page }) => {
     await waitForBuilding(page)
-    await page.getByRole('tab', { name: 'High' }).click()
+    await page.getByRole('button', { name: 'High view' }).first().click()
     await page.waitForTimeout(300)
     const src = await page.locator('[data-orbit-show]').getAttribute('src')
     expect(src).toMatch(/day-high\.jpg/)
@@ -92,7 +92,7 @@ test.describe('Building orbit (Panom-style)', () => {
 
   test('Bird\'s eye view mode loads top orbit stills', async ({ page }) => {
     await waitForBuilding(page)
-    await page.getByRole('tab', { name: "Bird's eye" }).click()
+    await page.getByRole('button', { name: "Bird's eye view" }).first().click()
     await page.waitForTimeout(300)
     const src = await page.locator('[data-orbit-show]').getAttribute('src')
     expect(src).toMatch(/day-top\.jpg/)

@@ -1182,52 +1182,95 @@ html.velbee-tour-active body {
   box-shadow: 0 0 0 2px var(--accent-dim);
 }
 
-.orbit-view-modes {
+.orbit-view-modes,
+.orbit-view-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.orbit-view-switch-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-right: 4px;
+}
+
+.orbit-view-switch-btn {
+  min-width: auto !important;
+  padding: 0 14px !important;
+  font-size: 0.82rem;
+  color: var(--muted);
+  border: 1px solid var(--line) !important;
+  background: rgba(20, 22, 28, 0.9) !important;
+}
+
+.orbit-view-switch-btn.is-on {
+  color: var(--text);
+  border-color: var(--accent) !important;
+  background: var(--accent-dim) !important;
+}
+
+.orbit-view-switch-topbar {
+  grid-column: 1 / -1;
+  justify-content: center;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+  padding-bottom: 2px;
+}
+
+.orbit-view-switch-float {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
   bottom: calc(118px + var(--safe-bottom));
   z-index: 5;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  max-width: calc(100% - 24px);
-  padding: 6px;
-  border-radius: 999px;
-  background: rgba(12, 13, 16, 0.82);
+  max-width: calc(100% - 20px);
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(12, 13, 16, 0.88);
   border: 1px solid var(--line);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
 }
 
-.orbit-view-mode {
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.82rem;
-  cursor: pointer;
+.orbit-view-switch-label {
+  white-space: nowrap;
 }
 
-.orbit-view-mode.is-on {
-  color: var(--text);
-  background: var(--accent-dim);
-  border-color: var(--accent);
+.stage-building-only .topbar-building:has(.orbit-view-switch-topbar) {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto;
 }
 
-.orbit-view-mode:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.stage-building-only .orbit-view-modes {
+.stage-building-only .orbit-view-switch-float {
   bottom: calc(128px + var(--safe-bottom));
 }
 
 .stage-building-only .building-hint {
-  bottom: calc(188px + var(--safe-bottom));
+  bottom: calc(196px + var(--safe-bottom));
+}
+
+@media (max-width: 420px) {
+  .orbit-view-switch-btn {
+    padding: 0 10px !important;
+    font-size: 0.76rem;
+  }
+
+  .orbit-view-switch-btn .orbit-view-switch-label {
+    max-width: 4.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* legacy aliases removed — use orbit-view-switch */
+.orbit-view-mode {
+  display: none;
 }
 
 .orbit-plan-spin,

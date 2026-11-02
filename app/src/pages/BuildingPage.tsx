@@ -5,6 +5,43 @@ import { OrbitStill } from '../components/OrbitStill'
 import { useContent } from '../data/ContentContext'
 import { compassDeg } from '../data/labels'
 import { isBuildingOnlyMode, showcaseTitle, VISUALS_BRAND } from '../config/visuals'
+import type { OrbitPitchRing } from '../data/types'
+
+function ViewModeButtons({
+  pitchRings,
+  activeIndex,
+  onSelect,
+  className,
+  showHeading,
+}: {
+  pitchRings: OrbitPitchRing[]
+  activeIndex: number
+  onSelect: (index: number) => void
+  className: string
+  showHeading?: boolean
+}) {
+  return (
+    <div className={className} role="group" aria-label="Switch camera view">
+      {showHeading ? <span className="orbit-view-switch-heading">View</span> : null}
+      {pitchRings.map((ring, i) => (
+        <button
+          key={ring.id}
+          type="button"
+          className={
+            i === activeIndex
+              ? 'orbit-nav-btn orbit-view-switch-btn is-on'
+              : 'orbit-nav-btn orbit-view-switch-btn'
+          }
+          aria-pressed={i === activeIndex}
+          aria-label={`${ring.label} view`}
+          onClick={() => onSelect(i)}
+        >
+          <span className="orbit-view-switch-label">{ring.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
 
 const SNAP_MS = 220
 const PX_PER_FRAME_DESKTOP = 3
@@ -285,10 +322,10 @@ export function BuildingPage() {
 
   const stageClass = buildingOnly ? 'stage stage-building-only' : 'stage'
   const hintDesktop = canPitch
-    ? 'Drag sideways for 360° · choose Mid, High, or Bird\'s eye · scroll or −/+ to zoom'
+    ? 'Drag sideways for 360° · use View buttons · scroll or −/+ to zoom'
     : 'Drag to rotate · Scroll or −/+ to zoom'
   const hintTouch = canPitch
-    ? 'Swipe sideways for 360° · tap view mode · pinch or −/+ to zoom'
+    ? 'Swipe sideways for 360° · tap View buttons · pinch or −/+ to zoom'
     : 'Swipe to rotate · Pinch or −/+ to zoom'
 
   return (
@@ -314,6 +351,15 @@ export function BuildingPage() {
         <div className="compass" aria-label={`Facing ${angle.face}${canPitch ? ` · ${pitchRing?.label ?? ''}` : ''}`}>
           <span style={{ transform: `rotate(${compassDeg(angle.face)}deg)` }}>N</span>
         </div>
+        {canPitch ? (
+          <ViewModeButtons
+            pitchRings={pitchRings}
+            activeIndex={nearestPitch}
+            onSelect={selectPitchRing}
+            className="orbit-view-switch orbit-view-switch-topbar"
+            showHeading
+          />
+        ) : null}
       </header>
 
       <div className="stage-body">
@@ -345,36 +391,19 @@ export function BuildingPage() {
             </button>
           </div>
           {canPitch ? (
-            <div className="orbit-view-modes" role="tablist" aria-label="Camera view">
-              {pitchRings.map((ring, i) => (
-                <button
-                  key={ring.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === nearestPitch}
-                  className={i === nearestPitch ? 'orbit-view-mode is-on' : 'orbit-view-mode'}
-                  onClick={() => selectPitchRing(i)}
-                >
-                  {ring.label}
-                </button>
-              ))}
-            </div>
+            <ViewModeButtons
+              pitchRings={pitchRings}
+              activeIndex={nearestPitch}
+              onSelect={selectPitchRing}
+              className="orbit-view-switch orbit-view-switch-float"
+              showHeading
+            />
           ) : null}
           {buildingOnly ? (
             <p className="building-hint">
               <span className="building-hint-desktop">{hintDesktop}</span>
               <span className="building-hint-touch">{hintTouch}</span>
             </p>
-          ) : null}
-          {canPitch ? (
-            <div className="orbit-pitch-rail" aria-hidden>
-              {pitchRings.map((ring, i) => (
-                <span
-                  key={ring.id}
-                  className={i === nearestPitch ? 'orbit-pitch-dot is-on' : 'orbit-pitch-dot'}
-                />
-              ))}
-            </div>
           ) : null}
         </section>
 
