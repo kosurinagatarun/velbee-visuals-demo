@@ -307,7 +307,7 @@ export function BuildingPage() {
 
   const stageClass = buildingOnly ? 'stage stage-building-only' : 'stage'
   const hintDesktop = canPitch
-    ? 'Drag sideways · up/down for view · scroll or −/+ to zoom'
+    ? 'Drag sideways · up/down for mid / high / top · scroll or −/+ to zoom'
     : 'Drag to rotate · Scroll or −/+ to zoom'
   const hintTouch = canPitch
     ? 'Swipe sideways · up/down for view · pinch or −/+ to zoom'

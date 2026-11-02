@@ -1,37 +1,19 @@
-# One orbit — Regular + High + Bird's eye
+# Building orbit — mid, high, bird's eye
 
-Three **pitch rings** in `building-spec.json` = **one** drag surface:
+Ingest from `D:\knt\visuals\renders\`:
 
-| Drag | Result |
-|------|--------|
-| **Left / right** | Spin around the tower at the current height |
-| **Up / down** | Move **Regular → High → Bird's eye** (smooth blend) |
+| Renders folder | Pitch | Output |
+|----------------|--------|--------|
+| `BOTTOM/` | **Mid** | `building/NNN/day.jpg` |
+| `TOP - MID/` | **High** | `building/NNN/day-high.jpg` |
+| `TOP/` | **Bird's eye** | `building/NNN/day-top.jpg` |
 
-## Files
-
-| Ring | Label | Path |
-|------|--------|------|
-| Regular | Eye-level Lumion | `building/NNN/day.jpg` |
-| High | Elevated oblique | `building/NNN/day-high.jpg` |
-| Bird's eye | Plan / nadir | `building/plan/top.jpg` (one file; spins on horizontal drag) |
-
-## Placeholder high band
-
-Until Lumion delivers a real high orbit, run:
+Re-ingest after new exports:
 
 ```bash
-cd app
-npm run bake:day-high
+python content/scripts/ingest_render_pitches.py
 ```
 
-That builds **301** `day-high.jpg` from each `day.jpg` + light top blend (spin works; replace with real Lumion when ready).
+`BOTTOM` = mid (eye-level orbit), not a “lower” angle. No band below mid.
 
-## Final Lumion delivery
-
-Friend renders **two** full orbits + **one** top still:
-
-1. Current pass → `day.jpg` (done)
-2. Higher camera, same steps → `day-high.jpg`
-3. Nadir → `plan/top.jpg`
-
-No change to app code after that — only swap JPEGs.
+App: drag sideways at any height; drag **up** mid → high → bird's-eye.

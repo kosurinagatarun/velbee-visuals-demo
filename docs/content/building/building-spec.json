@@ -1,6 +1,6 @@
 {
-  "reference": "301 Lumion orbit stills (TEST 0_00000 … 00300, ingested to 001–301)",
-  "program": "Gachibowli tower exterior — Lumion perspective stills",
+  "reference": "renders/ BOTTOM + TOP-MID + TOP ingested to day / day-high / day-top",
+  "program": "Gachibowli tower exterior \u2014 Lumion perspective stills",
   "massing_m": {
     "width": 22,
     "depth": 12,
@@ -17,9 +17,19 @@
   },
   "pitch_rings": [
     {
-      "id": "eye",
-      "label": "Regular",
+      "id": "mid",
+      "label": "Mid",
       "file": "day.jpg"
+    },
+    {
+      "id": "high",
+      "label": "High",
+      "file": "day-high.jpg"
+    },
+    {
+      "id": "top",
+      "label": "Bird's eye",
+      "file": "day-top.jpg"
     }
   ],
   "output": {
