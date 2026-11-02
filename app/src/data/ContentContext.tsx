@@ -27,18 +27,24 @@ export function ContentProvider({ children }: { children: ReactNode }) {
           return
         }
 
-        const total =
-          pack.pitchRings.reduce(
-            (sum, ring) => sum + (ring.shared ? 1 : pack.angles.length),
-            0,
-          ) || pack.angles.length
-        setState({ status: 'loading', phase: 'assets', loaded: 0, total })
+        const midRing = pack.pitchRings[0]
+        const midOnly = midRing ? [midRing] : pack.pitchRings
+        const midTotal = pack.angles.length
 
-        await preloadBuildingOrbit(pack.angles, pack.pitchRings, (loaded, t) => {
+        setState({ status: 'loading', phase: 'assets', loaded: 0, total: midTotal })
+
+        await preloadBuildingOrbit(pack.angles, midOnly, (loaded, t) => {
           if (!cancelled) setState({ status: 'loading', phase: 'assets', loaded, total: t })
         })
 
         if (!cancelled) setState({ status: 'ready', pack })
+
+        const extra = pack.pitchRings.slice(1)
+        if (extra.length > 0 && !cancelled) {
+          void preloadBuildingOrbit(pack.angles, extra).catch(() => {
+            /* OrbitStill keeps loading bands on demand */
+          })
+        }
       })
       .catch((err: unknown) => {
         if (!cancelled) {

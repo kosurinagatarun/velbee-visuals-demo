@@ -32,7 +32,7 @@ function isLevel(value: string): value is FloorLevel {
   return value === 'ground' || value === '1' || value === '2'
 }
 
-const BUILDING_CACHE = 'orbit-render-v2'
+const BUILDING_CACHE = 'orbit-render-v3'
 
 const DEFAULT_PITCH_RINGS: OrbitPitchRing[] = [{ id: 'eye', label: 'Side', file: 'day.jpg' }]
 
@@ -78,7 +78,7 @@ export async function preloadBuildingOrbit(
     }
     for (const a of angles) urls.push(buildingStillUrl(a.id, ring, 'day'))
   }
-  await preloadImages(urls, { concurrency: 10, onProgress })
+  await preloadImages(urls, { concurrency: 8, onProgress })
 }
 
 export function plateAssetUrl(plateCode: string, file: string): string {

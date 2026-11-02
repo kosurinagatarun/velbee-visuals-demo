@@ -13,7 +13,7 @@ BUILDING = REPO / "content" / "building"
 RENDERS = REPO / "renders"
 SPEC = BUILDING / "building-spec.json"
 OUT_W, OUT_H = 1920, 1080
-JPEG_Q = 94
+JPEG_Q = 80
 
 PREFIX_SEQ_RE = re.compile(r"^.+_(\d+)\.(jpe?g|png|webp)$", re.I)
 
@@ -28,9 +28,8 @@ def cover(img: Image.Image, w: int, h: int) -> Image.Image:
     scale = max(w / sw, h / sh)
     nw, nh = int(sw * scale), int(sh * scale)
     out = img.resize((nw, nh), Image.Resampling.LANCZOS)
-    left = (nw - h) // 2 if False else (nw - w) // 2
-    top = (nh - h) // 2
     left = (nw - w) // 2
+    top = (nh - h) // 2
     return out.crop((left, top, left + w, top + h))
 
 
