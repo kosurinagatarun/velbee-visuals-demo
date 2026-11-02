@@ -17,7 +17,7 @@
 html.is-building-showcase,
 html.is-building-showcase body {
   overscroll-behavior: none;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 * {

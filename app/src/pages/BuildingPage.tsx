@@ -9,8 +9,9 @@ import { isBuildingOnlyMode, showcaseTitle, VISUALS_BRAND } from '../config/visu
 const SNAP_MS = 220
 const PX_PER_FRAME_DESKTOP = 3
 const PX_PER_FRAME_MOBILE = 2
-const PX_PER_PITCH_DESKTOP = 48
-const PX_PER_PITCH_MOBILE = 36
+const PX_PER_PITCH_DESKTOP = 32
+const PX_PER_PITCH_MOBILE = 24
+const DRAG_AXIS_LOCK_PX = 8
 const ORBIT_ZOOM_MIN = 0.92
 const ORBIT_ZOOM_MAX = 2.5
 
@@ -80,6 +81,7 @@ export function BuildingPage() {
     start: number
     startPitch: number
     moved: boolean
+    axis: 'none' | 'orbit' | 'pitch'
   } | null>(null)
   const animRef = useRef<number | null>(null)
   const viewRef = useRef<HTMLElement>(null)
@@ -100,6 +102,19 @@ export function BuildingPage() {
       ? `${showcaseTitle()} · ${VISUALS_BRAND.product}`
       : `${VISUALS_BRAND.product} — Showcase`
   }, [buildingOnly])
+
+  useEffect(() => {
+    if (dragRef.current) return
+    orbitRef.current = urlIndex
+    setNearest(urlIndex)
+  }, [urlIndex])
+
+  useEffect(() => {
+    if (dragRef.current) return
+    const p = initialPitch >= 0 ? initialPitch : 0
+    pitchRef.current = p
+    setNearestPitch(p)
+  }, [initialPitch])
 
   function writeOrbit(value: number) {
     const next = wrap(value, count)
@@ -229,6 +244,7 @@ export function BuildingPage() {
         start: orbitRef.current,
         startPitch: pitchRef.current,
         moved: false,
+        axis: 'none',
       }
       setDragging(true)
       try {
@@ -260,8 +276,13 @@ export function BuildingPage() {
       const dx = event.clientX - drag.x
       const dy = event.clientY - drag.y
       if (Math.abs(dx) > 6 || Math.abs(dy) > 6) drag.moved = true
-      writeOrbitRef.current(drag.start - dx / pxPerFrame())
-      if (canPitch) {
+      if (drag.axis === 'none' && (Math.abs(dx) >= DRAG_AXIS_LOCK_PX || Math.abs(dy) >= DRAG_AXIS_LOCK_PX)) {
+        drag.axis = Math.abs(dx) >= Math.abs(dy) ? 'orbit' : 'pitch'
+      }
+      if (drag.axis === 'orbit' || drag.axis === 'none') {
+        writeOrbitRef.current(drag.start - dx / pxPerFrame())
+      }
+      if (canPitch && (drag.axis === 'pitch' || drag.axis === 'none')) {
         writePitchRef.current(drag.startPitch - dy / pxPerPitch())
       }
     }
@@ -287,13 +308,20 @@ export function BuildingPage() {
       if (!drag) return
       dragRef.current = null
       setDragging(false)
-      animateToRef.current(Math.round(orbitRef.current))
-      if (canPitch) animatePitchTo(Math.round(pitchRef.current))
+      const axis = drag.axis
+      if (axis === 'pitch') {
+        if (canPitch) animatePitchTo(Math.round(pitchRef.current))
+      } else if (axis === 'orbit') {
+        animateToRef.current(Math.round(orbitRef.current))
+      } else {
+        animateToRef.current(Math.round(orbitRef.current))
+        if (canPitch) animatePitchTo(Math.round(pitchRef.current))
+      }
     }
 
     el.addEventListener('wheel', onWheel, { passive: false })
     el.addEventListener('pointerdown', onDown)
-    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointermove', onMove, { passive: false })
     el.addEventListener('pointerup', endPointer)
     el.addEventListener('pointercancel', endPointer)
     return () => {

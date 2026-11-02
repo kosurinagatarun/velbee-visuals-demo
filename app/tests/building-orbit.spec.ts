@@ -2,14 +2,15 @@ import { expect, test } from '@playwright/test'
 
 async function waitForBuilding(page: import('@playwright/test').Page) {
   await page.goto('/')
-  await expect(page.getByRole('img', { name: /Building\. Drag to rotate\./i })).toBeVisible({
-    timeout: 30_000,
+  await expect(page.getByRole('region', { name: 'Building view' })).toBeVisible({
+    timeout: 120_000,
   })
+  await expect(page.getByText('Content failed to load')).toHaveCount(0)
 }
 
 function angleFromSrc(src: string | null): string | null {
   if (!src) return null
-  const m = src.match(/\/building\/(\d{3})\/day\.jpg/)
+  const m = src.match(/\/building\/(\d{3})\/day(?:-high|-top)?\.jpg/)
   return m?.[1] ?? null
 }
 
@@ -79,6 +80,22 @@ test.describe('Building orbit (Panom-style)', () => {
     await page.waitForTimeout(350)
     const b = await visibleAngle(page)
     expect(a).toBe(b)
+  })
+
+  test('vertical drag changes pitch band (high / top assets)', async ({ page }) => {
+    await waitForBuilding(page)
+    const viewport = page.getByRole('region', { name: 'Building view' })
+    const box = await viewport.boundingBox()
+    expect(box).toBeTruthy()
+    const cx = box!.x + box!.width / 2
+    const cy = box!.y + box!.height / 2
+    await page.mouse.move(cx, cy)
+    await page.mouse.down()
+    await page.mouse.move(cx, cy - 320, { steps: 16 })
+    await page.mouse.up()
+    await page.waitForTimeout(500)
+    const src = await page.locator('[data-orbit-show]').getAttribute('src')
+    expect(src).toMatch(/day-(high|top)\.jpg/)
   })
 
   test('floor band opens selection', async ({ page }) => {

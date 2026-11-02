@@ -58,17 +58,32 @@ export function OrbitStill({ angles, pitchRings, orbitRef, pitchRef }: Props) {
         touch(urlFor(index + d, low))
         if (high !== low) touch(urlFor(index + d, high))
       }
+      if (pitchMax > 0) {
+        for (let p = 0; p <= pitchMax; p += 1) {
+          for (let d = -WINDOW; d <= WINDOW; d += 1) {
+            touch(urlFor(index + d, p))
+          }
+        }
+      }
     }
 
     function applySrc(el: HTMLImageElement, url: string) {
       if (!url) return
+      const current = el.getAttribute('src') ?? ''
+      const path = url.split('?')[0]!
+      if (current === url || el.src.endsWith(path)) {
+        if (el.hasAttribute('data-orbit-show')) el.setAttribute('data-orbit-show', url)
+        return
+      }
       const img = cache.get(url)
       if (img?.complete && img.naturalWidth > 0) {
-        if (el.src !== url) el.src = url
+        el.src = url
+        if (el.hasAttribute('data-orbit-show')) el.setAttribute('data-orbit-show', url)
         return
       }
       touch(url)
-      if (el.getAttribute('src') !== url) el.src = url
+      el.src = url
+      if (el.hasAttribute('data-orbit-show')) el.setAttribute('data-orbit-show', url)
     }
 
     function spinStyle(ring: OrbitPitchRing | undefined) {
@@ -85,7 +100,8 @@ export function OrbitStill({ angles, pitchRings, orbitRef, pitchRef }: Props) {
     let frame = 0
 
     const paint = () => {
-      const index = wrap(Math.round(orbitRef.current), count)
+      const orbitF = orbitRef.current
+      const index = wrap(Math.floor(orbitF + 1e-6), count)
       const pitch = clamp(pitchRef.current, 0, pitchMax)
       const low = Math.floor(pitch)
       const high = Math.min(low + 1, pitchMax)
@@ -139,7 +155,7 @@ export function OrbitStill({ angles, pitchRings, orbitRef, pitchRef }: Props) {
     <div className="orbit" ref={rootRef} role="img" aria-label="Building. Drag sideways and vertically.">
       {sizer ? <img className="orbit-sizer" src={sizerUrl} alt="" draggable={false} /> : null}
       <div className="orbit-layer is-on" data-orbit-layer="">
-        <img data-orbit-a="" src={urlA0} alt="" draggable={false} />
+        <img data-orbit-a="" data-orbit-show="" src={urlA0} alt="" draggable={false} />
         <img data-orbit-b="" className="orbit-plan-spin" src={urlB0} alt="" draggable={false} style={{ opacity: 0 }} />
       </div>
     </div>
