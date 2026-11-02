@@ -32,7 +32,7 @@ function isLevel(value: string): value is FloorLevel {
   return value === 'ground' || value === '1' || value === '2'
 }
 
-const BUILDING_CACHE = 'orbit-render-v3'
+const BUILDING_CACHE = 'orbit-render-v4'
 
 const DEFAULT_PITCH_RINGS: OrbitPitchRing[] = [{ id: 'eye', label: 'Side', file: 'day.jpg' }]
 

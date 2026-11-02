@@ -78,16 +78,25 @@ def ingest_band(source_dir: Path, out_name: str, frame_count: int) -> int:
 def main() -> None:
     frame_count = load_frame_count()
     bands = [
-        (RENDERS / "BOTTOM", "day.jpg", "Mid (BOTTOM → day.jpg)"),
-        (RENDERS / "TOP - MID", "day-high.jpg", "High (TOP-MID → day-high.jpg)"),
-        (RENDERS / "TOP", "day-top.jpg", "Bird's eye (TOP → day-top.jpg)"),
+        (RENDERS / "REG", "day.jpg", "Regular (REG → day.jpg)"),
+        (RENDERS / "BT", "day-high.jpg", "High (BT → day-high.jpg)"),
+        (RENDERS / "BIRD EYE", "day-top.jpg", "Bird's eye (BIRD EYE → day-top.jpg)"),
     ]
-    for src_dir, out_name, label in bands:
+    # Legacy Lumion folder names
+    legacy = [
+        (RENDERS / "BOTTOM", "day.jpg"),
+        (RENDERS / "TOP - MID", "day-high.jpg"),
+        (RENDERS / "TOP", "day-top.jpg"),
+    ]
+    for i, (src_dir, out_name, label) in enumerate(bands):
+        if not src_dir.is_dir() and legacy[i][0].is_dir():
+            src_dir = legacy[i][0]
+            label = f"{label} [legacy {src_dir.name}]"
         count = ingest_band(src_dir, out_name, frame_count)
         print(f"{label}: {count} frames → building/NNN/{out_name}")
 
     spec = json.loads(SPEC.read_text(encoding="utf-8"))
-    spec["reference"] = "renders/ BOTTOM + TOP-MID + TOP ingested to day / day-high / day-top"
+    spec["reference"] = "renders/ REG + BT + BIRD EYE → day / day-high / day-top"
     spec["pitch_rings"] = [
         {"id": "mid", "label": "Mid", "file": "day.jpg"},
         {"id": "high", "label": "High", "file": "day-high.jpg"},
