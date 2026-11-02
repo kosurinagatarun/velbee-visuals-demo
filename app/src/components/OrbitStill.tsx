@@ -53,10 +53,9 @@ export function OrbitStill({ angles, pitchRings, orbitRef, pitchRef }: Props) {
       cache.set(url, img)
     }
 
-    function preload(index: number, low: number, high: number) {
+    function preload(index: number, ringIdx: number) {
       for (let d = -WINDOW; d <= WINDOW; d += 1) {
-        touch(urlFor(index + d, low))
-        if (high !== low) touch(urlFor(index + d, high))
+        touch(urlFor(index + d, ringIdx))
       }
       if (pitchMax > 0) {
         for (let p = 0; p <= pitchMax; p += 1) {
@@ -102,41 +101,20 @@ export function OrbitStill({ angles, pitchRings, orbitRef, pitchRef }: Props) {
     const paint = () => {
       const orbitF = orbitRef.current
       const index = wrap(Math.floor(orbitF + 1e-6), count)
-      const pitch = clamp(pitchRef.current, 0, pitchMax)
-      const low = Math.floor(pitch)
-      const high = Math.min(low + 1, pitchMax)
-      const frac = pitch - low
+      const ringIdx = clamp(Math.round(pitchRef.current), 0, pitchMax)
+      const ring = pitchRings[ringIdx]!
 
-      const ringLow = pitchRings[low]!
-      const ringHigh = pitchRings[high]!
-
-      if (pitchMax === 0) {
-        layerA.style.opacity = '1'
-        layerB.style.opacity = '0'
-        const url = urlFor(index, 0)
-        const k = `0:${index}`
-        if (k !== key) {
-          applySrc(layerA, url)
-          key = k
-          preload(index, 0, 0)
-        }
-        Object.assign(layerA.style, spinStyle(ringLow))
-        layerB.style.transform = ''
-      } else {
-        const urlA = urlFor(index, low)
-        const urlB = urlFor(index, high)
-        const k = `${low}:${high}:${index}`
-        if (k !== key) {
-          applySrc(layerA, urlA)
-          applySrc(layerB, urlB)
-          preload(index, low, high)
-          key = k
-        }
-        layerA.style.opacity = String(1 - frac)
-        layerB.style.opacity = String(frac)
-        Object.assign(layerA.style, spinStyle(ringLow))
-        Object.assign(layerB.style, spinStyle(ringHigh))
+      layerA.style.opacity = '1'
+      layerB.style.opacity = '0'
+      const url = urlFor(index, ringIdx)
+      const k = `${ringIdx}:${index}`
+      if (k !== key) {
+        applySrc(layerA, url)
+        key = k
+        preload(index, ringIdx)
       }
+      Object.assign(layerA.style, spinStyle(ring))
+      layerB.style.transform = ''
 
       frame = requestAnimationFrame(paint)
     }
@@ -152,7 +130,7 @@ export function OrbitStill({ angles, pitchRings, orbitRef, pitchRef }: Props) {
       : urlA0
 
   return (
-    <div className="orbit" ref={rootRef} role="img" aria-label="Building. Drag sideways and vertically.">
+    <div className="orbit" ref={rootRef} role="img" aria-label="Building. Drag sideways to rotate.">
       {sizer ? <img className="orbit-sizer" src={sizerUrl} alt="" draggable={false} /> : null}
       <div className="orbit-layer is-on" data-orbit-layer="">
         <img data-orbit-a="" data-orbit-show="" src={urlA0} alt="" draggable={false} />

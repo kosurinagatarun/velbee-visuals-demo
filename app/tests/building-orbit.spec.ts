@@ -82,20 +82,20 @@ test.describe('Building orbit (Panom-style)', () => {
     expect(a).toBe(b)
   })
 
-  test('vertical drag changes pitch band (high / top assets)', async ({ page }) => {
+  test('High view mode loads high orbit stills', async ({ page }) => {
     await waitForBuilding(page)
-    const viewport = page.getByRole('region', { name: 'Building view' })
-    const box = await viewport.boundingBox()
-    expect(box).toBeTruthy()
-    const cx = box!.x + box!.width / 2
-    const cy = box!.y + box!.height / 2
-    await page.mouse.move(cx, cy)
-    await page.mouse.down()
-    await page.mouse.move(cx, cy - 320, { steps: 16 })
-    await page.mouse.up()
-    await page.waitForTimeout(500)
+    await page.getByRole('tab', { name: 'High' }).click()
+    await page.waitForTimeout(300)
     const src = await page.locator('[data-orbit-show]').getAttribute('src')
-    expect(src).toMatch(/day-(high|top)\.jpg/)
+    expect(src).toMatch(/day-high\.jpg/)
+  })
+
+  test('Bird\'s eye view mode loads top orbit stills', async ({ page }) => {
+    await waitForBuilding(page)
+    await page.getByRole('tab', { name: "Bird's eye" }).click()
+    await page.waitForTimeout(300)
+    const src = await page.locator('[data-orbit-show]').getAttribute('src')
+    expect(src).toMatch(/day-top\.jpg/)
   })
 
   test('floor band opens selection', async ({ page }) => {

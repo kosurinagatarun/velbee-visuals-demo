@@ -9,20 +9,12 @@ import { isBuildingOnlyMode, showcaseTitle, VISUALS_BRAND } from '../config/visu
 const SNAP_MS = 220
 const PX_PER_FRAME_DESKTOP = 3
 const PX_PER_FRAME_MOBILE = 2
-const PX_PER_PITCH_DESKTOP = 32
-const PX_PER_PITCH_MOBILE = 24
-const DRAG_AXIS_LOCK_PX = 8
 const ORBIT_ZOOM_MIN = 0.92
 const ORBIT_ZOOM_MAX = 2.5
 
 function pxPerFrame() {
   if (typeof window === 'undefined') return PX_PER_FRAME_DESKTOP
   return window.matchMedia('(max-width: 860px)').matches ? PX_PER_FRAME_MOBILE : PX_PER_FRAME_DESKTOP
-}
-
-function pxPerPitch() {
-  if (typeof window === 'undefined') return PX_PER_PITCH_DESKTOP
-  return window.matchMedia('(max-width: 860px)').matches ? PX_PER_PITCH_MOBILE : PX_PER_PITCH_DESKTOP
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -77,17 +69,13 @@ export function BuildingPage() {
   const [nearestPitch, setNearestPitch] = useState(initialPitch >= 0 ? initialPitch : 0)
   const dragRef = useRef<{
     x: number
-    y: number
     start: number
-    startPitch: number
     moved: boolean
-    axis: 'none' | 'orbit' | 'pitch'
   } | null>(null)
   const animRef = useRef<number | null>(null)
   const viewRef = useRef<HTMLElement>(null)
   const animateToRef = useRef<(target: number) => void>(() => {})
   const writeOrbitRef = useRef<(value: number) => void>(() => {})
-  const writePitchRef = useRef<(value: number) => void>(() => {})
 
   useEffect(() => {
     if (buildingOnly) {
@@ -123,11 +111,10 @@ export function BuildingPage() {
     setNearest((current) => (current === snap ? current : snap))
   }
 
-  function writePitch(value: number) {
-    const next = clamp(value, 0, pitchMax)
+  function writePitch(index: number) {
+    const next = clamp(Math.round(index), 0, pitchMax)
     pitchRef.current = next
-    const snap = clamp(Math.round(next), 0, pitchMax)
-    setNearestPitch((current) => (current === snap ? current : snap))
+    setNearestPitch((current) => (current === next ? current : next))
   }
 
   const angle = pack.angles[nearest] ?? pack.angles[0]
@@ -154,27 +141,11 @@ export function BuildingPage() {
     setParams(merged, { replace: true })
   }
 
-  function animatePitchTo(target: number) {
+  function selectPitchRing(index: number) {
     if (!canPitch) return
-    const start = pitchRef.current
-    const end = clamp(target, 0, pitchMax)
-    const t0 = performance.now()
-
-    const tick = (now: number) => {
-      const u = Math.min(1, (now - t0) / SNAP_MS)
-      const eased = 1 - (1 - u) ** 3
-      writePitch(start + (end - start) * eased)
-      if (u < 1) requestAnimationFrame(tick)
-      else {
-        writePitch(end)
-        commitPitch(end)
-      }
-    }
-    requestAnimationFrame(tick)
-  }
-
-  function nudgePitch(step: number) {
-    animatePitchTo(Math.round(pitchRef.current) + step)
+    const end = clamp(index, 0, pitchMax)
+    writePitch(end)
+    commitPitch(end)
   }
 
   function animateTo(target: number) {
@@ -205,7 +176,6 @@ export function BuildingPage() {
 
   animateToRef.current = animateTo
   writeOrbitRef.current = writeOrbit
-  writePitchRef.current = writePitch
 
   useEffect(() => {
     const el = viewRef.current
@@ -240,11 +210,8 @@ export function BuildingPage() {
       if (animRef.current) cancelAnimationFrame(animRef.current)
       dragRef.current = {
         x: event.clientX,
-        y: event.clientY,
         start: orbitRef.current,
-        startPitch: pitchRef.current,
         moved: false,
-        axis: 'none',
       }
       setDragging(true)
       try {
@@ -274,17 +241,8 @@ export function BuildingPage() {
       if (!drag) return
       event.preventDefault()
       const dx = event.clientX - drag.x
-      const dy = event.clientY - drag.y
-      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) drag.moved = true
-      if (drag.axis === 'none' && (Math.abs(dx) >= DRAG_AXIS_LOCK_PX || Math.abs(dy) >= DRAG_AXIS_LOCK_PX)) {
-        drag.axis = Math.abs(dx) >= Math.abs(dy) ? 'orbit' : 'pitch'
-      }
-      if (drag.axis === 'orbit' || drag.axis === 'none') {
-        writeOrbitRef.current(drag.start - dx / pxPerFrame())
-      }
-      if (canPitch && (drag.axis === 'pitch' || drag.axis === 'none')) {
-        writePitchRef.current(drag.startPitch - dy / pxPerPitch())
-      }
+      if (Math.abs(dx) > 6) drag.moved = true
+      writeOrbitRef.current(drag.start - dx / pxPerFrame())
     }
 
     const endPointer = (event: PointerEvent) => {
@@ -308,15 +266,7 @@ export function BuildingPage() {
       if (!drag) return
       dragRef.current = null
       setDragging(false)
-      const axis = drag.axis
-      if (axis === 'pitch') {
-        if (canPitch) animatePitchTo(Math.round(pitchRef.current))
-      } else if (axis === 'orbit') {
-        animateToRef.current(Math.round(orbitRef.current))
-      } else {
-        animateToRef.current(Math.round(orbitRef.current))
-        if (canPitch) animatePitchTo(Math.round(pitchRef.current))
-      }
+      animateToRef.current(Math.round(orbitRef.current))
     }
 
     el.addEventListener('wheel', onWheel, { passive: false })
@@ -335,10 +285,10 @@ export function BuildingPage() {
 
   const stageClass = buildingOnly ? 'stage stage-building-only' : 'stage'
   const hintDesktop = canPitch
-    ? 'Drag sideways · up/down for mid / high / top · scroll or −/+ to zoom'
+    ? 'Drag sideways for 360° · choose Mid, High, or Bird\'s eye · scroll or −/+ to zoom'
     : 'Drag to rotate · Scroll or −/+ to zoom'
   const hintTouch = canPitch
-    ? 'Swipe sideways · up/down for view · pinch or −/+ to zoom'
+    ? 'Swipe sideways for 360° · tap view mode · pinch or −/+ to zoom'
     : 'Swipe to rotate · Pinch or −/+ to zoom'
 
   return (
@@ -364,17 +314,6 @@ export function BuildingPage() {
         <div className="compass" aria-label={`Facing ${angle.face}${canPitch ? ` · ${pitchRing?.label ?? ''}` : ''}`}>
           <span style={{ transform: `rotate(${compassDeg(angle.face)}deg)` }}>N</span>
         </div>
-        {canPitch ? (
-          <div className="orbit-pitch-nav" aria-label="View angle">
-            <button type="button" className="orbit-nav-btn" onClick={() => nudgePitch(-1)} aria-label="Lower view">
-              ↓
-            </button>
-            <span className="orbit-pitch-label">{pitchRing?.label}</span>
-            <button type="button" className="orbit-nav-btn" onClick={() => nudgePitch(1)} aria-label="Raise view">
-              ↑
-            </button>
-          </div>
-        ) : null}
       </header>
 
       <div className="stage-body">
@@ -405,6 +344,22 @@ export function BuildingPage() {
               ⟲
             </button>
           </div>
+          {canPitch ? (
+            <div className="orbit-view-modes" role="tablist" aria-label="Camera view">
+              {pitchRings.map((ring, i) => (
+                <button
+                  key={ring.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={i === nearestPitch}
+                  className={i === nearestPitch ? 'orbit-view-mode is-on' : 'orbit-view-mode'}
+                  onClick={() => selectPitchRing(i)}
+                >
+                  {ring.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           {buildingOnly ? (
             <p className="building-hint">
               <span className="building-hint-desktop">{hintDesktop}</span>
